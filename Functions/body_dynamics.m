@@ -1,4 +1,4 @@
-function xrd = body_dynamics(body_v,body_a, UUV_or,xr,U)
+function xrd = fcn(body_v,body_a, UUV_or,Ui,Uo)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % INPUTS:
 % body_v - 6x1 vector of body fixed velocities:
@@ -77,7 +77,6 @@ phi = UUV_or(1)
 theta = UUV_or(2);
 psi = UUV_or(3);
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % MAIN CODE:
 
@@ -90,4 +89,21 @@ Ar = [-(((Ix-Iz)*r*p+m*(zg*(ud-v*r+w*q)-xg*(wd-u*q+v*p)))+Mqd*qd+Mwd*wd+Mrp*r*p+
 Br = [0 -Tp*xr/(Iy-Mqd) 0; 0 0 Tp*xr/(Iz-Nrd)];
 
 % Differential Equation of Body rate dynamics
-xrd = Ar + Br*U;
+xrd = Ar + Br*Ui;
+
+% POSITION DYNAMICS
+% M matrix terms
+M11 = -u*sin(theta)*sin(psi)+v*sin(phi)*cos(theta)*sin(psi)+w*cos(phi)*cos(theta)*sin(psi);
+M12 = u*cos(theta)*cos(psi)+v*(sin(phi)*sin(theta)*cos(psi)-cos(phi)*sin(psi))+w*(sin(phi)*sin(psi)-cos(phi)*sin(theta)*cos(phi));
+M21 = -u*cos(theta) - v*sin(theta)*sin(phi)-w*sin(theta)*cos(phi);
+M22 = 0;
+
+% N matrix terms
+N11 = u*cos(theta)*sin(psi) + v*(sin(phi)*sin(theta)*sin(psi)+cos(phi)*cos(psi))+w*(sin(theta)*cos(psi)*sin(psi)-sin(phi)*cos(psi));
+N21 = -u*sin(theta) + v*sin(phi)*cos(theta) + w*cos(psi)*cos(theta);
+
+M = [M11 M12; M21 M22];
+N = [N11; N21];
+
+% dereivative of position vector of outer loop control
+yz_d = M*Uo + N;
